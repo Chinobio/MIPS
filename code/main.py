@@ -9,7 +9,7 @@ root_file = "database/"
 register = np.ones(32)
 register[0] = 0
 memory = np.ones(32)
-
+aa = 123
 enter = 1
 class control_signals:
     def __init__(self, instructions):
