@@ -36,7 +36,18 @@ class control_signals:
                     # self.TOTAL_CONTROL.append(str(self.cycle) + " " + self.current_instructions[j].split(" ")[0] + ":" + stage_name)
 
         # sorted_NOW = sorted(self.TOTAL_CONTROL, key=lambda x: int(x.split(' ')[0]))
-        print(self.TOTAL_CONTROL)
+        self.printAns()
+    
+    def printAns(self): #格式輸出並輸出至txt
+        with open('output.txt', 'w') as file:
+            num_of_cycles = int(self.TOTAL_CONTROL[-1][0]) #取cycle個數
+            for i in range(num_of_cycles):
+                print("cycle",i+1)
+                file.write("cycle "+str(i+1) + '\n') #txt
+                for elements in reversed(self.TOTAL_CONTROL):
+                    if(elements[0] == str(i+1)):
+                        print("\t"+elements[2:])
+                        file.write("\t"+elements[2:] + '\n') #txt
 
 class MIPS:
     def __init__(self):
