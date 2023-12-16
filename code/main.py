@@ -20,8 +20,10 @@ class control_signals:
         self.current_instructions = [None, None, None, None, None]  # 存儲每個週期中的指令
 
     def execute(self):
-        for i in range(len(self.instructions) + len(self.stages) - 1):
+        # for i in range(len(self.instructions) + len(self.stages) - 1):
+        while(self.cycle == 0 or self.current_instructions != [None, None, None, None, None]):
             self.cycle += 1
+            i = self.cycle-1
             # 將新的指令添加到當前指令列表中
             if i < len(self.instructions):
                 self.current_instructions = [self.instructions[i]] + self.current_instructions[:-1]
@@ -36,6 +38,7 @@ class control_signals:
                     # self.TOTAL_CONTROL.append(str(self.cycle) + " " + self.current_instructions[j].split(" ")[0] + ":" + stage_name)
 
         # sorted_NOW = sorted(self.TOTAL_CONTROL, key=lambda x: int(x.split(' ')[0]))
+        # print(self.current_instructions)
         self.printAns()
     
     def printAns(self): #格式輸出並輸出至txt
@@ -47,7 +50,7 @@ class control_signals:
                 for elements in reversed(self.TOTAL_CONTROL):
                     if(elements[0] == str(i+1)):
                         print("\t"+elements[2:])
-                        file.write("\t"+elements[2:] + '\n') #txt
+                        file.write("cycle "+str(i+1) + '\n') #txt
 
 class MIPS:
     def __init__(self):

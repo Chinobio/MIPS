@@ -1,28 +1,28 @@
 cycle 1
-	lw:IF
+cycle 1
 cycle 2
-	lw:ID
-	lw:IF
+cycle 2
+cycle 2
 cycle 3
-	lw:EX -> 0101011
-	lw:ID
-	add:IF
+cycle 3
+cycle 3
+cycle 3
 cycle 4
-	lw:MEM -> 01011
-	lw:EX -> 0101011
-	add:ID
-	sw:IF
+cycle 4
+cycle 4
+cycle 4
+cycle 4
 cycle 5
-	lw:WB -> 11
-	lw:MEM -> 01011
-	add:EX -> 1000010
-	sw:ID
+cycle 5
+cycle 5
+cycle 5
+cycle 5
 cycle 6
-	lw:WB -> 11
-	add:MEM -> 00010
-	sw:EX -> X10010X
+cycle 6
+cycle 6
+cycle 6
 cycle 7
-	add:WB -> 10
-	sw:MEM -> 0010X
+cycle 7
+cycle 7
 cycle 8
-	sw:WB -> 0X
+cycle 8
