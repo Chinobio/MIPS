@@ -73,9 +73,9 @@ def ID(instruction):
         offset = int(PipelineRegister.IF_ID['output'].rawInstruction.split(" ")[2].split(",")[0].split("(")[0])
     elif instruction.name == "beq":
         rs = int(PipelineRegister.IF_ID['output'].rawInstruction.split(" ")[0].split("$")[1].split(",")[0])
-        rt = int(PipelineRegister.IF_ID['output'].rawInstruction.split(" ")[1].split("$")[1].split("$")[1])
+        rt = int(PipelineRegister.IF_ID['output'].rawInstruction.split(" ")[1].split("$")[1].split(",")[0])
         rd = 0
-        offset = int(PipelineRegister.IF_ID['output'].rawInstruction.split(" ")[2].split(",")[1])
+        offset = int(PipelineRegister.IF_ID['output'].rawInstruction.split(" ")[2])
     else:
         raise Exception("Unknown instruction name")
     instruction.next_stage = "EX"
