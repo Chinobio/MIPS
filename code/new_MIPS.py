@@ -275,13 +275,11 @@ cycle = 1
 while currentInstructionNum < len(rawInstructions) or stageInstructions["WB"] != None or stageInstructions["MEM"] != None or stageInstructions["EX"] != None or stageInstructions["ID"] != None or stageInstructions["IF"] != None:
     # print(f"cycle {cycle}")
     # print('in main ',currentInstructionNum)
-    
-    IF(stageInstructions["IF"])
-    ID(stageInstructions["ID"])
-    EX(stageInstructions["EX"])
-    MEM(stageInstructions["MEM"])
     WB(stageInstructions["WB"])
-
+    MEM(stageInstructions["MEM"])
+    EX(stageInstructions["EX"])
+    ID(stageInstructions["ID"])
+    IF(stageInstructions["IF"])
     stageInstructions2 = stageInstructions
     for stage in ["WB", "MEM", "EX", "ID", "IF"]:
         if stageInstructions[stage] == None:
@@ -296,6 +294,7 @@ while currentInstructionNum < len(rawInstructions) or stageInstructions["WB"] !=
     PipelineRegister.ID_EX['output'] = PipelineRegister.ID_EX['input']
     PipelineRegister.EX_MEM['output'] = PipelineRegister.EX_MEM['input']
     PipelineRegister.MEM_WB['output'] = PipelineRegister.MEM_WB['input']
+    print("=====================================")
     cycle += 1
     if stageInstructions["WB"] is None and stageInstructions["MEM"] is None and stageInstructions["EX"] is None and stageInstructions["ID"] is None and stageInstructions["IF"] is None:
         break
