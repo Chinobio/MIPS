@@ -25,6 +25,8 @@ def check_ex_hazard():
         PipelineRegister.EX_MEM['output'].rd != 0 and
         (PipelineRegister.EX_MEM['output'].rd == PipelineRegister.ID_EX['output'].rs or
          PipelineRegister.EX_MEM['output'].rd == PipelineRegister.ID_EX['output'].rt)):
+        # print(PipelineRegister.EX_MEM['output'].rawInstruction)
+        # print(PipelineRegister.ID_EX['output'].rawInstruction)
         print("EX hazard")
         stageInstructions["ID"].next_stage = "ID"
         return True
@@ -341,19 +343,14 @@ cycle = 1
 
 qq = ["WB", "MEM", "EX", "ID", "IF"]
 while currentInstructionNum < len(rawInstructions) or stageInstructions["WB"] != None or stageInstructions["MEM"] != None or stageInstructions["EX"] != None or stageInstructions["ID"] != None or stageInstructions["IF"] != None:
-    if cycle == 5:
-        a = 0
-        # for i in stageInstructions.values():
-        #     if i is not None:
-        #         print(i.name)
-        #     else:
-        #         print("NONE")
+    
     WB(stageInstructions["WB"])
     MEM(stageInstructions["MEM"])
     EX(stageInstructions["EX"])
     ID(stageInstructions["ID"])
     IF(stageInstructions["IF"])
     stageInstructions2 = stageInstructions
+    flag = {"now":""}
     for stage in ["WB", "MEM", "EX", "ID", "IF"]:
         if stageInstructions[stage] == None:
             continue
@@ -362,6 +359,8 @@ while currentInstructionNum < len(rawInstructions) or stageInstructions["WB"] !=
             # print("aaa",delete_stage_index)
             stageInstructions2
             stageInstructions2[qq[delete_stage_index]] = None
+            # ID IF 後面都保持原本的指令
+            flag["now"] = stage
             break
         else:
             stageInstructions2[stageInstructions[stage].next_stage] = stageInstructions[stage]
@@ -375,15 +374,26 @@ while currentInstructionNum < len(rawInstructions) or stageInstructions["WB"] !=
     #         else:
     #             print("NONE")
     # print(stageInstructions)
-    PipelineRegister.IF_ID['output'] = PipelineRegister.IF_ID['input']
-    PipelineRegister.ID_EX['output'] = PipelineRegister.ID_EX['input']
-    PipelineRegister.EX_MEM['output'] = PipelineRegister.EX_MEM['input']
-    PipelineRegister.MEM_WB['output'] = PipelineRegister.MEM_WB['input']
+    if flag["now"] == "ID":
+        PipelineRegister.EX_MEM['output'] = PipelineRegister.EX_MEM['input']
+        PipelineRegister.MEM_WB['output'] = PipelineRegister.MEM_WB['input']
+        # PipelineRegister.ID_EX['output'] = None
+        # currentInstructionNum -= 1
+        flag["now"] = ""
+
+        # 如果是在ID後面都要保持原本的指令，代表EX 會是NONE
+    else:
+        PipelineRegister.IF_ID['output'] = PipelineRegister.IF_ID['input']
+        PipelineRegister.ID_EX['output'] = PipelineRegister.ID_EX['input']
+        PipelineRegister.EX_MEM['output'] = PipelineRegister.EX_MEM['input']
+        PipelineRegister.MEM_WB['output'] = PipelineRegister.MEM_WB['input']
     if cycle == 4:
-        print(PipelineRegister.IF_ID['output'].rawInstruction)
-        print(PipelineRegister.ID_EX['output'].rawInstruction)
-        print(PipelineRegister.EX_MEM['output'].rawInstruction)
-        print(PipelineRegister.MEM_WB['output'].rawInstruction)
+        # a = 0
+        for i in stageInstructions.values():
+            if i is not None:
+                print(i.name)
+            else:
+                print("NONE")
     cycle += 1
     print("=====================================")
     if stageInstructions["WB"] is None and stageInstructions["MEM"] is None and stageInstructions["EX"] is None and stageInstructions["ID"] is None and stageInstructions["IF"] is None:
