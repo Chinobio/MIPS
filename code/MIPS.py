@@ -16,23 +16,26 @@ def read_file(file):
     return instructions
 
 def check_ex_hazard(rs,rt,rd):
-    if PipelineRegister.EX_MEM['output'].rt == -1 or PipelineRegister.ID_EX['output'].rt == -1 or PipelineRegister.EX_MEM['input'].rt == -1 or PipelineRegister.ID_EX['input'].rt == -1 : 
+    if PipelineRegister.EX_MEM['input'].rt[0] == -1 or rt == -1 and PipelineRegister.EX_MEM['input'].rt[0] == -1 or rt == -1 : 
         print("false")
         return False
     # print(PipelineRegister.EX_MEM['output'].rawInstruction) #這裡要放判斷name lw rd 是rt
-    if (PipelineRegister.EX_MEM['output'] is not None and
-        PipelineRegister.EX_MEM['output'].signal['WB'][0] == "1" and
-        PipelineRegister.EX_MEM['output'].rawInstruction.split(" ")[0] == "lw" and
-        PipelineRegister.EX_MEM['output'].rt[0] != 0 and
-        (PipelineRegister.EX_MEM['output'].rt[0] == rs or
-        PipelineRegister.EX_MEM['output'].rt[0] == rt)):
-        # print(PipelineRegister.EX_MEM['output'].rawInstruction)
-        # print(PipelineRegister.ID_EX['output'].rawInstruction)
-        # print("EX_MEM rd",PipelineRegister.EX_MEM['output'].rt)
-        # print("rs,rt",PipelineRegister.ID_EX['output'].rs,PipelineRegister.ID_EX['output'].rt)
-        print("EX hazard")
-        stageInstructions["ID"].next_stage = "ID"
-        return True
+    if PipelineRegister.EX_MEM['input'] is not None:
+        if (PipelineRegister.EX_MEM['input'].signal['WB'][0] == "1" and
+            PipelineRegister.EX_MEM['input'].rawInstruction.split(" ")[0] == "lw" and
+            PipelineRegister.EX_MEM['input'].rt[0] != 0 and
+            (PipelineRegister.EX_MEM['input'].rt[0] == rs or
+            PipelineRegister.EX_MEM['input'].rt[0] == rt)):
+            # print(PipelineRegister.EX_MEM['output'].rawInstruction)
+            # print(PipelineRegister.ID_EX['output'].rawInstruction)
+            # print("EX_MEM rd",PipelineRegister.EX_MEM['output'].rt)
+            # print("rs,rt",PipelineRegister.ID_EX['output'].rs,PipelineRegister.ID_EX['output'].rt)
+            print("EX hazard")
+            stageInstructions["ID"].next_stage = "ID"
+            
+            return True
+        else:
+            return False
     else:
         return False
 
@@ -51,6 +54,7 @@ def IF(instruction):
     global currentInstructionNum,cycle,return_value_flag
     if currentInstructionNum >= len(rawInstructions):
         PipelineRegister.IF_ID['input'] = pipInfo(-1,-1,-1,0,'None')
+        print("IF stage: None")
         # stageInstructions["IF"] = None
         # currentInstructionNum += 1
         return
@@ -73,7 +77,7 @@ def IF(instruction):
     # print('ID raw ',instruction.rawInstruction)
 def ID(instruction:Instruction):
     global currentInstructionNum,cycle
-    if instruction == None:
+    if instruction == None or PipelineRegister.IF_ID['output'].rawInstruction == None:
         print("ID stage: None")
         PipelineRegister.ID_EX['input'] = pipInfo(-1,-1,-1,0,'None')
         return
@@ -223,6 +227,7 @@ def MEM(instruction:Instruction):
     global cycle,currentInstructionNum,return_value_flag
     if instruction == None:
         PipelineRegister.MEM_WB['input'] = pipInfo(-1,-1,-1,0,'None')
+        print("MEM stage: None")
         return
     # if currentInstructionNum >= len(rawInstructions) + 5:
     #     stageInstructions["MEM"] = None
@@ -262,6 +267,7 @@ def MEM(instruction:Instruction):
 def WB(instruction):
     global cycle
     if instruction == None:
+        print("WB stage: None")
         return
     # print(PipelineRegister.MEM_WB['output'].loadword)
     print("WB stage",PipelineRegister.MEM_WB['output'].rawInstruction,cycle)
@@ -430,6 +436,8 @@ while cycle == 1 or  stageInstructions["WB"] != None or stageInstructions["MEM"]
     #         print(i)
     #         print(stageInstructions[i].name)
     cycle += 1
+    if cycle > 15:
+        break
     print("=====================================")
     # if stageInstructions["WB"] is None and stageInstructions["MEM"] is None and stageInstructions["EX"] is None and stageInstructions["ID"] is None and stageInstructions["IF"] is None:
     #     break
