@@ -15,7 +15,7 @@ def read_file(file):
     f.close() 
     return instructions
 
-def check_ex_hazard():
+def check_ex_hazard(rs,rt,rd):
     if PipelineRegister.EX_MEM['output'].rt == -1 or PipelineRegister.ID_EX['output'].rt == -1 or PipelineRegister.EX_MEM['input'].rt == -1 or PipelineRegister.ID_EX['input'].rt == -1 : 
         print("false")
         return False
@@ -23,13 +23,13 @@ def check_ex_hazard():
     if (PipelineRegister.EX_MEM['output'] is not None and
         PipelineRegister.EX_MEM['output'].signal['WB'][0] == "1" and
         PipelineRegister.EX_MEM['output'].rawInstruction.split(" ")[0] == "lw" and
-        PipelineRegister.EX_MEM['output'].rt != 0 and
-        (PipelineRegister.EX_MEM['output'].rt == PipelineRegister.ID_EX['output'].rs or
-        PipelineRegister.EX_MEM['output'].rt == PipelineRegister.ID_EX['output'].rt)):
+        PipelineRegister.EX_MEM['output'].rt[0] != 0 and
+        (PipelineRegister.EX_MEM['output'].rt[0] == rs or
+        PipelineRegister.EX_MEM['output'].rt[0] == rt)):
         # print(PipelineRegister.EX_MEM['output'].rawInstruction)
         # print(PipelineRegister.ID_EX['output'].rawInstruction)
-        print("EX_MEM rd",PipelineRegister.EX_MEM['output'].rt)
-        print("rs,rt",PipelineRegister.ID_EX['output'].rs,PipelineRegister.ID_EX['output'].rt)
+        # print("EX_MEM rd",PipelineRegister.EX_MEM['output'].rt)
+        # print("rs,rt",PipelineRegister.ID_EX['output'].rs,PipelineRegister.ID_EX['output'].rt)
         print("EX hazard")
         stageInstructions["ID"].next_stage = "ID"
         return True
@@ -71,8 +71,7 @@ def IF(instruction):
     # pipReg["IF/ID"] = pipInfo(None, None, None, None, instruction.name, rawInstruction=raw)
     # print('IF raw ',pipReg["IF/ID"].rawInstruction)
     # print('ID raw ',instruction.rawInstruction)
-def ID(instruction):
-    checkPiplineRegister_Rs_Rt_Rd(PipelineRegister.EX_MEM)
+def ID(instruction:Instruction):
     global currentInstructionNum,cycle
     if instruction == None:
         print("ID stage: None")
@@ -85,11 +84,14 @@ def ID(instruction):
     # print('ID instruction name ',instruction.name)
     print("ID Stage",PipelineRegister.IF_ID['output'].rawInstruction,cycle)
     
-    if currentInstructionNum >= 3:
-        flag = check_ex_hazard()
-        if flag:
-            print("ID return")
-            return
+    # if currentInstructionNum >= 3:
+    #     checkPiplineRegister_Rs_Rt_Rd(PipelineRegister.EX_MEM)
+    #     print("--")
+    #     checkPiplineRegister_Rs_Rt_Rd(PipelineRegister.IF_ID)
+    #     flag = check_ex_hazard()
+    #     if flag:
+    #         print("ID return")
+    #         return
 
     
     if instruction.name == "add":
@@ -124,16 +126,25 @@ def ID(instruction):
             stageInstructions["ID"] = instruction
         else:    
             PipelineRegister.ID_EX['input'] = None
-        
        
     else:
         raise Exception("Unknown instruction name")
+    
+    if currentInstructionNum >= 3:
+        checkPiplineRegister_Rs_Rt_Rd(PipelineRegister.EX_MEM)
+        # print("--")
+        # print(rs,rt,rd,type(rs),type(PipelineRegister.EX_MEM['output'].rt))
+        flag = check_ex_hazard(rs,rt,rd)
+        if flag:
+            print("ID return")
+            return
+        
     instruction.next_stage = "EX"
     PipelineRegister.ID_EX['input'] = pipInfo(rs, rt, rd, offset, instruction.name,PipelineRegister.IF_ID['output'].rawInstruction)
     stageInstructions["ID"] = instruction
     # pipReg["ID/EX"] = pipInfo(rs, rt, rd, offset, instruction.name)
 
-def EX(instruction):
+def EX(instruction:Instruction):
     global cycle,currentInstructionNum
     if instruction == None:
         PipelineRegister.EX_MEM['input'] = pipInfo(-1,-1,-1,0,'None')
