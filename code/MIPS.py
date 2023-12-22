@@ -410,9 +410,17 @@ while cycle == 1 or  stageInstructions["WB"] != None or stageInstructions["MEM"]
             break
         else:
             stageInstructions2[stageInstructions[stage].next_stage] = stageInstructions[stage]
-    
+    stageInstructions2["IF"] = None #每次清除IF
     print("CYCLE",cycle)
     stageInstructions = stageInstructions2
+    
+    print("**********************")
+    for i in reversed(re_stage):
+        if stageInstructions[i] != None:
+            print(i,stageInstructions[i].name)
+        else:  
+            print(i,"None")
+    print("**********************")
     # if cycle == 4:
     #     for i in stageInstructions.values():
     #         if i is not None:
@@ -443,10 +451,8 @@ while cycle == 1 or  stageInstructions["WB"] != None or stageInstructions["MEM"]
     #         print(i)
     #         print(stageInstructions[i].name)
     cycle += 1
-    
     if cycle > 15:
         break
-    
     if flag['now'] != "":
         currentInstructionNum -= 1
         print("currentInstructionNum -= 1")
