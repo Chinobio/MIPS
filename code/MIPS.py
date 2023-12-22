@@ -22,7 +22,8 @@ def check_ex_hazard(rs,rt,rd):
     # print(PipelineRegister.EX_MEM['output'].rawInstruction) #這裡要放判斷name lw rd 是rt
     if PipelineRegister.EX_MEM['input'] is not None:
         if (PipelineRegister.EX_MEM['input'].signal['WB'][0] == "1" and
-            PipelineRegister.EX_MEM['input'].rawInstruction.split(" ")[0] == "lw" and
+            (PipelineRegister.EX_MEM['input'].rawInstruction.split(" ")[0] == "lw" or
+             PipelineRegister.EX_MEM['input'].rawInstruction.split(" ")[0] == "sw") and
             PipelineRegister.EX_MEM['input'].rt[0] != 0 and
             (PipelineRegister.EX_MEM['input'].rt[0] == rs or
             PipelineRegister.EX_MEM['input'].rt[0] == rt)):
@@ -34,6 +35,15 @@ def check_ex_hazard(rs,rt,rd):
             stageInstructions["ID"].next_stage = "ID"
             
             return True
+        elif(PipelineRegister.EX_MEM['input'].signal['WB'][0] == "1" and
+            (PipelineRegister.EX_MEM['input'].rawInstruction.split(" ")[0] == "add" or
+             PipelineRegister.EX_MEM['input'].rawInstruction.split(" ")[0] == "sub") and
+            PipelineRegister.EX_MEM['input'].rt[0] != 0 and
+            (PipelineRegister.EX_MEM['input'].rt[0] == rs or
+            PipelineRegister.EX_MEM['input'].rt[0] == rt)):
+            
+            print("EX hazard")
+            stageInstructions["ID"].next_stage = "ID"
         else:
             return False
     else:
@@ -212,10 +222,10 @@ def EX(instruction:Instruction):
         PipelineRegister.EX_MEM['input'] = PipelineRegister.ID_EX['output']
         PipelineRegister.EX_MEM['input'].address = address
     elif instruction.name == "beq":
-        rs = reg[PipelineRegister.ID_EX['output'].rs].copy()
-        rt = reg[PipelineRegister.ID_EX['output'].rt].copy()
-        rd = reg[PipelineRegister.ID_EX['output'].rd].copy()
-        offset = PipelineRegister.ID_EX['output'].offset
+        rs = reg[PipelineRegister.ID_EX['output'].rs[0]].copy()
+        rt = reg[PipelineRegister.ID_EX['output'].rt[0]].copy()
+        rd = reg[PipelineRegister.ID_EX['output'].rd[0]].copy()
+        offset = PipelineRegister.ID_EX['output'].offset[0]
         instruction.next_stage = "MEM"
         if rs == rt:
             instruction.next_stage = "MEM"
@@ -365,7 +375,7 @@ class PipelineRegister:
     MEM_WB = {'input': None, 'output': None}
 
 # 原始指令字串list
-rawInstructions = read_file("ex2.txt")
+rawInstructions = read_file("beq.txt")
 
 # 在stage中的指令
 stageInstructions = {
