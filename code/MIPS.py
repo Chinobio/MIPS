@@ -18,13 +18,15 @@ def read_file(file):
 A = ["EX_MEM", "MEM_WB"]
 def check_beq_hazard(rs, rt):
     for stage in A:
-        if PipelineRegister[stage]['input'] is not None:
-            instruction = PipelineRegister[stage]['input']
-            if instruction.signal['WB'][0] == "1" and instruction.rt[0] != 0 and \
-               (instruction.rt[0] == rs or instruction.rt[0] == rt):
+        if PipelineRegister.EX_MEM['input'] is not None and PipelineRegister.MEM_WB["input"] is not None:
+            INS1 = PipelineRegister.EX_MEM['input']
+            INS2 = PipelineRegister.MEM_WB["input"]
+            # beq 前一個是 lw ==> stall 2次
+            if INS1.signal['WB'][0] == "1" and INS1.rt[0] != 0 and \
+               (INS1.rt[0] == rs or INS1.rt[0] == rt):
                 print(f"{stage} hazard")
                 stageInstructions["ID"].next_stage = "ID"
-                return True
+                return True            
     return False
 
 def check_ex_hazard(rs,rt,rd):
