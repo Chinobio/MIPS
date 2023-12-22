@@ -15,21 +15,27 @@ def read_file(file):
     f.close() 
     return instructions
 
-
-
-def check_ex_hazard():
-    # print(PipelineRegister.EX_MEM['output'].rawInstruction)
-    if (PipelineRegister.EX_MEM['output'] is not None and
-        PipelineRegister.EX_MEM['output'].signal['WB'][0] == "1" and
-        PipelineRegister.EX_MEM['output'].rawInstruction.split(" ")[0] == "lw" and
-        PipelineRegister.EX_MEM['output'].rd != 0 and
-        (PipelineRegister.EX_MEM['output'].rd == PipelineRegister.ID_EX['output'].rs or
-         PipelineRegister.EX_MEM['output'].rd == PipelineRegister.ID_EX['output'].rt)):
-        # print(PipelineRegister.EX_MEM['output'].rawInstruction)
-        # print(PipelineRegister.ID_EX['output'].rawInstruction)
-        print("EX hazard")
-        stageInstructions["ID"].next_stage = "ID"
-        return True
+def check_ex_hazard(rs,rt,rd):
+    if PipelineRegister.EX_MEM['input'].rt[0] == -1 or rt == -1 and PipelineRegister.EX_MEM['input'].rt[0] == -1 or rt == -1 : 
+        print("false")
+        return False
+    # print(PipelineRegister.EX_MEM['output'].rawInstruction) #這裡要放判斷name lw rd 是rt
+    if PipelineRegister.EX_MEM['input'] is not None:
+        if (PipelineRegister.EX_MEM['input'].signal['WB'][0] == "1" and
+            PipelineRegister.EX_MEM['input'].rawInstruction.split(" ")[0] == "lw" and
+            PipelineRegister.EX_MEM['input'].rt[0] != 0 and
+            (PipelineRegister.EX_MEM['input'].rt[0] == rs or
+            PipelineRegister.EX_MEM['input'].rt[0] == rt)):
+            # print(PipelineRegister.EX_MEM['output'].rawInstruction)
+            # print(PipelineRegister.ID_EX['output'].rawInstruction)
+            # print("EX_MEM rd",PipelineRegister.EX_MEM['output'].rt)
+            # print("rs,rt",PipelineRegister.ID_EX['output'].rs,PipelineRegister.ID_EX['output'].rt)
+            print("EX hazard")
+            stageInstructions["ID"].next_stage = "ID"
+            
+            return True
+        else:
+            return False
     else:
         return False
 
@@ -41,14 +47,21 @@ def MEM_hazard(instruction, register_status):
     return False
 
 def IF(instruction):
+    
     '''
     lw $3, 16($0) 
     add $6, $4, $5
     '''
+        
     global currentInstructionNum,cycle,return_value_flag
+    
+    # if cycle == 5:
+    #     print(currentInstructionNum)
     if currentInstructionNum >= len(rawInstructions):
-        stageInstructions["IF"] = None
-        currentInstructionNum += 1
+        PipelineRegister.IF_ID['input'] = pipInfo(-1,-1,-1,0,'None')
+        print("IF stage: None")
+        # stageInstructions["IF"] = None
+        # currentInstructionNum += 1
         return
 
     raw = rawInstructions[currentInstructionNum]
@@ -67,22 +80,27 @@ def IF(instruction):
     # pipReg["IF/ID"] = pipInfo(None, None, None, None, instruction.name, rawInstruction=raw)
     # print('IF raw ',pipReg["IF/ID"].rawInstruction)
     # print('ID raw ',instruction.rawInstruction)
-def ID(instruction):
-    
+def ID(instruction:Instruction):
     global currentInstructionNum,cycle
-    if instruction == None:
+    if instruction == None or PipelineRegister.IF_ID['output'].rawInstruction == None:
+        print("ID stage: None")
+        PipelineRegister.ID_EX['input'] = pipInfo(-1,-1,-1,0,'None')
         return
-    if currentInstructionNum >= len(rawInstructions) + 1:
-        currentInstructionNum += 1
-        stageInstructions["ID"] = None
-        return
+    # if currentInstructionNum >= len(rawInstructions) + 1:
+    #     # currentInstructionNum += 1
+    #     # stageInstructions["ID"] = None
+    #     return
     # print('ID instruction name ',instruction.name)
     print("ID Stage",PipelineRegister.IF_ID['output'].rawInstruction,cycle)
     
-    if currentInstructionNum >= 3:
-        flag = check_ex_hazard()
-        if flag:
-            return
+    # if currentInstructionNum >= 3:
+    #     checkPiplineRegister_Rs_Rt_Rd(PipelineRegister.EX_MEM)
+    #     print("--")
+    #     checkPiplineRegister_Rs_Rt_Rd(PipelineRegister.IF_ID)
+    #     flag = check_ex_hazard()
+    #     if flag:
+    #         print("ID return")
+    #         return
 
     
     if instruction.name == "add":
@@ -117,23 +135,35 @@ def ID(instruction):
             stageInstructions["ID"] = instruction
         else:    
             PipelineRegister.ID_EX['input'] = None
-        
        
     else:
         raise Exception("Unknown instruction name")
+    
+    if currentInstructionNum >= 3:
+        checkPiplineRegister_Rs_Rt_Rd(PipelineRegister.EX_MEM)
+        # print("--")
+        # print(rs,rt,rd,type(rs),type(PipelineRegister.EX_MEM['output'].rt))
+        global flag
+        if check_ex_hazard(rs,rt,rd):
+            flag['now'] = "ID"
+            print("ID return")
+            return
+        
     instruction.next_stage = "EX"
     PipelineRegister.ID_EX['input'] = pipInfo(rs, rt, rd, offset, instruction.name,PipelineRegister.IF_ID['output'].rawInstruction)
     stageInstructions["ID"] = instruction
     # pipReg["ID/EX"] = pipInfo(rs, rt, rd, offset, instruction.name)
 
-def EX(instruction):
+def EX(instruction:Instruction):
     global cycle,currentInstructionNum
     if instruction == None:
+        PipelineRegister.EX_MEM['input'] = pipInfo(-1,-1,-1,0,'None')
+        print("EX stage: None")
         return
-    if currentInstructionNum >= len(rawInstructions) + 3:
-        stageInstructions["EX"] = None
-        currentInstructionNum += 1
-        return
+    # if currentInstructionNum >= len(rawInstructions) + 3:
+    #     stageInstructions["EX"] = None
+    #     currentInstructionNum += 1
+    #     return
     
     print("EX stage",PipelineRegister.ID_EX['output'].rawInstruction,cycle)
     if instruction.name == "add":
@@ -202,11 +232,13 @@ def EX(instruction):
 def MEM(instruction:Instruction):
     global cycle,currentInstructionNum,return_value_flag
     if instruction == None:
+        PipelineRegister.MEM_WB['input'] = pipInfo(-1,-1,-1,0,'None')
+        print("MEM stage: None")
         return
-    if currentInstructionNum >= len(rawInstructions) + 5:
-        stageInstructions["MEM"] = None
-        currentInstructionNum += 1
-        return
+    # if currentInstructionNum >= len(rawInstructions) + 5:
+    #     stageInstructions["MEM"] = None
+    #     currentInstructionNum += 1
+    #     return
     print("MEM stage",PipelineRegister.EX_MEM['output'].rawInstruction,cycle)
     if PipelineRegister.EX_MEM['output'].signal['M'][2] == "1": #sw
         temp = PipelineRegister.EX_MEM['output'].rt[0]
@@ -238,11 +270,13 @@ def MEM(instruction:Instruction):
     instruction.next_stage = "WB"
     stageInstructions["MEM"] = instruction
 
+
 def WB(instruction):
     global cycle
     if instruction == None:
+        print("WB stage: None")
         return
-    # print(PipelineRegister.MEM_WB['output'].loadword)
+
     print("WB stage",PipelineRegister.MEM_WB['output'].rawInstruction,cycle)
     result = PipelineRegister.MEM_WB['output'].loadword
     # ALU 接
@@ -300,6 +334,11 @@ class pipInfo:
                 'M' : '000',
                 'WB' : '10'
             },
+            'None': {
+                'EX': '22',
+                'M' : '222',
+                'WB' : '22'
+            }
         }
         self.rs = rs,
         self.rt = rt,
@@ -327,7 +366,7 @@ class PipelineRegister:
     MEM_WB = {'input': None, 'output': None}
 
 # 原始指令字串list
-rawInstructions = read_file("ex2.txt")
+rawInstructions = read_file("ex3.txt")
 
 # 在stage中的指令
 stageInstructions = {
@@ -341,63 +380,62 @@ stageInstructions = {
 currentInstructionNum = 0
 cycle = 1
 
-qq = ["WB", "MEM", "EX", "ID", "IF"]
-while currentInstructionNum < len(rawInstructions) or stageInstructions["WB"] != None or stageInstructions["MEM"] != None or stageInstructions["EX"] != None or stageInstructions["ID"] != None or stageInstructions["IF"] != None:
-    
+def checkPiplineRegister_Rs_Rt_Rd(asked:dict):
+    if asked['input'] != None:
+        print("input--------")
+        print("Rs",asked['input'].rs[0],"Rt",asked['input'].rt[0],"Rd",asked['input'].rd[0])
+    if asked['output'] != None:
+        print("output-------")
+        print("Rs",asked['output'].rs[0],"Rt",asked['output'].rt[0],"Rd",asked['output'].rd[0])
+        print("-------------")
+
+re_stage = ["WB", "MEM", "EX", "ID", "IF"]
+flag = {"now":""}
+while cycle == 1 or  stageInstructions["WB"] != None or stageInstructions["MEM"] != None or stageInstructions["EX"] != None or stageInstructions["ID"] != None or stageInstructions["IF"] != None: 
     WB(stageInstructions["WB"])
     MEM(stageInstructions["MEM"])
     EX(stageInstructions["EX"])
     ID(stageInstructions["ID"])
     IF(stageInstructions["IF"])
     stageInstructions2 = stageInstructions
-    flag = {"now":""}
-    for stage in ["WB", "MEM", "EX", "ID", "IF"]:
+    for stage in re_stage:
         if stageInstructions[stage] == None:
-            continue
-        if stageInstructions[stage].next_stage == stage:
+            if stage == "WB": continue
+            stageInstructions2[re_stage[re_stage.index(stage)-1]] = None
+        elif stageInstructions[stage].next_stage == stage:
             delete_stage_index = list(stageInstructions.keys()).index(stage) + 1
-            # print("aaa",delete_stage_index)
-            stageInstructions2
-            stageInstructions2[qq[delete_stage_index]] = None
-            # ID IF 後面都保持原本的指令
-            flag["now"] = stage
+            
+            stageInstructions2[re_stage[delete_stage_index]] = None
+            
             break
         else:
             stageInstructions2[stageInstructions[stage].next_stage] = stageInstructions[stage]
-    
+    stageInstructions2["IF"] = None
     print("CYCLE",cycle)
     stageInstructions = stageInstructions2
-    # if cycle == 4:
-    #     for i in stageInstructions.values():
-    #         if i is not None:
-    #             print(i.name)
-    #         else:
-    #             print("NONE")
-    # print(stageInstructions)
+
     if flag["now"] == "ID":
         PipelineRegister.EX_MEM['output'] = PipelineRegister.EX_MEM['input']
         PipelineRegister.MEM_WB['output'] = PipelineRegister.MEM_WB['input']
-        # PipelineRegister.ID_EX['output'] = None
-        # currentInstructionNum -= 1
-        flag["now"] = ""
 
-        # 如果是在ID後面都要保持原本的指令，代表EX 會是NONE
     else:
         PipelineRegister.IF_ID['output'] = PipelineRegister.IF_ID['input']
         PipelineRegister.ID_EX['output'] = PipelineRegister.ID_EX['input']
         PipelineRegister.EX_MEM['output'] = PipelineRegister.EX_MEM['input']
         PipelineRegister.MEM_WB['output'] = PipelineRegister.MEM_WB['input']
-    if cycle == 4:
-        # a = 0
-        for i in stageInstructions.values():
-            if i is not None:
-                print(i.name)
-            else:
-                print("NONE")
     cycle += 1
-    print("=====================================")
-    if stageInstructions["WB"] is None and stageInstructions["MEM"] is None and stageInstructions["EX"] is None and stageInstructions["ID"] is None and stageInstructions["IF"] is None:
+    
+    if cycle > 15:
         break
+    
+    if flag['now'] != "":
+        currentInstructionNum -= 1
+        print("currentInstructionNum -= 1")
+    flag['now'] = ""
+    print("=====================================")
+    # if stageInstructions["WB"] is None and stageInstructions["MEM"] is None and stageInstructions["EX"] is None and stageInstructions["ID"] is None and stageInstructions["IF"] is None:
+    #     break
 
 print("reg",reg)
+
 print("mem",mem)
