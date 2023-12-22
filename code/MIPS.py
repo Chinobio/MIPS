@@ -15,15 +15,9 @@ def read_file(file):
     f.close() 
     return instructions
 
-# def check_mem_hazard(instruction, register_status):
-#     if instruction.name == "lw":
-#         rt = instruction.rt
-#         if register_status[rt] == "EX" or register_status[rt] == "MEM":
-#             return True
-#     return False
-
+A = ["EX_MEM", "MEM_WB"]
 def check_beq_hazard(rs, rt):
-    for stage in ["EX_MEM", "MEM_WB"]:
+    for stage in A:
         if PipelineRegister[stage]['input'] is not None:
             instruction = PipelineRegister[stage]['input']
             if instruction.signal['WB'][0] == "1" and instruction.rt[0] != 0 and \
@@ -123,10 +117,10 @@ def ID(instruction:Instruction):
         rd = 0
         offset = int(PipelineRegister.IF_ID['output'].rawInstruction.split(" ")[3])
         test_beq_hazard = check_beq_hazard(rs,rt)
-        if test_beq_hazard:
-            print("ID return")
-            flag['now'] = "ID"
-            return
+        # if test_beq_hazard:
+        #     print("ID return")
+        #     flag['now'] = "ID"
+        #     return
         if rs == rt:
             currentInstructionNum += (offset+1)
             
