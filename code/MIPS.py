@@ -16,6 +16,60 @@ def read_file(file):
     f.close() 
     return instructions
 
+TWO_CYCLE_BEQ = False
+ONE_CYCLE_BEQ = False
+ONE_TEMP_CYCLE = -1
+TWO_TEMP_CYCLE = -1
+
+def check_beq_hazard(rs, rt,cycle):
+    global ONE_CYCLE_BEQ,TWO_CYCLE_BEQ,ONE_TEMP_CYCLE,TWO_TEMP_CYCLE
+    
+    # 抓到NONE
+    if PipelineRegister.EX_MEM['input'].signal['WB'][0] == "2" or PipelineRegister.EX_MEM['input'].signal['WB'][0] == "2":
+        if TWO_CYCLE_BEQ == True and cycle - TWO_TEMP_CYCLE == 1:
+            stageInstructions["ID"].next_stage = "ID"
+            return True
+        return False
+
+        # Need 1 stall cycle lw 接 R_type 
+    if ONE_CYCLE_BEQ == False and TWO_CYCLE_BEQ == False:
+        if PipelineRegister.MEM_WB['input'].signal['M'][1] == "1" and PipelineRegister.EX_MEM['input'].signal["EX"][0] == "1":
+            if PipelineRegister.ID_EX['input'].signal["M"][0] == "1" :
+                if PipelineRegister.ID_EX['input'].rt[0] == rs or PipelineRegister.ID_EX['input'].rt[0] == rt:
+                    print("BEQ hazard")
+                    stageInstructions["ID"].next_stage = "ID"
+                    ONE_CYCLE_BEQ = True
+                    ONE_TEMP_CYCLE = cycle
+                    return True
+        # Need 2 stall cycle 連續 lw lw 
+        elif PipelineRegister.EX_MEM['input'].signal["M"][1] == "1" and PipelineRegister.ID_EX['input'].signal["M"][0] == "1":
+            if PipelineRegister.ID_EX['input'].signal["M"][0] == "1" :
+                if PipelineRegister.ID_EX['input'].rt[0] == rs or PipelineRegister.ID_EX['input'].rt[0] == rt:
+                    print("BEQ hazard")
+                    stageInstructions["ID"].next_stage = "ID"
+                    TWO_CYCLE_BEQ = True
+                    TWO_TEMP_CYCLE = cycle
+                    return True
+        # Need 1 stall cycle 直接 R_type
+        # elif PipelineRegister.EX_MEM['input'].signal["EX"][0] == "1":
+        #     print(PipelineRegister.EX_MEM['input'].rawInstruction)
+        #     if PipelineRegister.ID_EX['input'].signal["M"][0] == "1" :
+        #         if PipelineRegister.EX_MEM['input'].rd[0] == rs or PipelineRegister.EX_MEM['input'].rd[0] == rt:
+        #             print("BEQ hazard")
+        #             stageInstructions["ID"].next_stage = "ID"
+        #             ONE_CYCLE_BEQ = True
+        #             TWO_TEMP_CYCLE = cycle
+        #             return True
+    if ONE_CYCLE_BEQ == True and cycle - ONE_TEMP_CYCLE == 1:
+        ONE_CYCLE_BEQ = False
+    # 存在兩次STALL
+    if TWO_CYCLE_BEQ == True and cycle - TWO_TEMP_CYCLE == 2:
+        TWO_CYCLE_BEQ = False
+    elif TWO_CYCLE_BEQ == True and cycle - TWO_TEMP_CYCLE == 1:
+        stageInstructions["ID"].next_stage = "ID"
+        return True
+    return False
+
 def check_ex_hazard(rs,rt,rd):
     if PipelineRegister.EX_MEM['input'].rt[0] == -1 or rt == -1 and PipelineRegister.EX_MEM['input'].rt[0] == -1 or rt == -1 : 
         print("false")
@@ -169,6 +223,9 @@ def ID(instruction:Instruction):
         # print("--")
         # print(rs,rt,rd,type(rs),type(PipelineRegister.EX_MEM['output'].rt))
     global flag
+    if check_beq_hazard(rs,rt,cycle):
+        flag['now'] == 'ID'
+        return
     if check_ex_hazard(rs,rt,rd):
         # print("ID return")
         if flag['now'] == 'ID':
@@ -397,7 +454,7 @@ class PipelineRegister:
     MEM_WB = {'input': None, 'output': None}
 
 # 原始指令字串list
-rawInstructions = read_file("memH.txt")
+rawInstructions = read_file("ex3.txt")
 
 # 在stage中的指令
 stageInstructions = {
