@@ -54,15 +54,16 @@ def check_beq_hazard(rs, rt,cycle):
                     TWO_TEMP_CYCLE = cycle
                     return True
         # Need 1 stall cycle 直接 R_type
-        # elif PipelineRegister.EX_MEM['input'].signal["EX"][0] == "1":
-        #     print(PipelineRegister.EX_MEM['input'].rawInstruction)
-        #     if PipelineRegister.ID_EX['input'].signal["M"][0] == "1" :
-        #         if PipelineRegister.EX_MEM['input'].rd[0] == rs or PipelineRegister.EX_MEM['input'].rd[0] == rt:
-        #             print("BEQ hazard")
-        #             stageInstructions["ID"].next_stage = "ID"
-        #             ONE_CYCLE_BEQ = True
-        #             TWO_TEMP_CYCLE = cycle
-        #             return True
+        elif PipelineRegister.EX_MEM['input'].signal["EX"][0] == "1":
+            # print(PipelineRegister.EX_MEM['input'].rawInstruction)
+            if PipelineRegister.ID_EX['input'].signal["M"][0] == "1" :
+                if PipelineRegister.EX_MEM['input'].rd[0] == rs or PipelineRegister.EX_MEM['input'].rd[0] == rt:
+                    print("BEQ hazard")
+                    flag['now'] = "ID"
+                    stageInstructions["ID"].next_stage = "ID"
+                    ONE_CYCLE_BEQ = True
+                    TWO_TEMP_CYCLE = cycle
+                    return True
     if ONE_CYCLE_BEQ == True and cycle - ONE_TEMP_CYCLE == 1:
         ONE_CYCLE_BEQ = False
     # 存在兩次STALL
@@ -136,7 +137,7 @@ def IF(instruction):
     add $6, $4, $5
     '''
         
-    global currentInstructionNum,cycle,return_value_flag
+    global currentInstructionNum,cycle
     
     # if cycle == 5:
     #     print(currentInstructionNum)
@@ -282,6 +283,7 @@ def EX(instruction:Instruction):
         rd = rs - rt
         offset = PipelineRegister.ID_EX['output'].offset
         instruction.next_stage = "MEM"
+        EX_result = rd
         # print("rs,rt,rd",rs,rt,rd)
         stageInstructions["EX"] = instruction
         PipelineRegister.ID_EX['output'].EX_result = EX_result
@@ -317,9 +319,7 @@ def EX(instruction:Instruction):
             stageInstructions["EX"] = instruction
         else:
             # 預測錯誤，抹掉捉錯的指令，再抓取正確位置的指令
-            currentInstructionNum = PipelineRegister.ID_EX['output'].branch_address
-            PipelineRegister.ID_EX['output'].branch = False
-            stageInstructions["EX"] = None
+            PipelineRegister.EX_MEM['input'] = PipelineRegister.ID_EX['output']
     else:
         raise Exception("Unknown instruction name")
 
@@ -353,10 +353,7 @@ def MEM(instruction:Instruction):
             PipelineRegister.MEM_WB['input'] = pipInfo(rs, rt, rd, offset, instruction.name, PipelineRegister.EX_MEM['output'].rawInstruction)
             stageInstructions["MEM"] = instruction
         else:
-            # 預測錯誤，抹掉捉錯的指令，再抓取正確位置的指令
-            currentInstructionNum = PipelineRegister.EX_MEM['output'].branch_address
-            PipelineRegister.EX_MEM['output'].branch = False
-            stageInstructions["MEM"] = None
+            PipelineRegister.MEM_WB['input'] = PipelineRegister.EX_MEM['output']
     else:
         loadWord = None
     PipelineRegister.MEM_WB['input'] = PipelineRegister.EX_MEM['output']
