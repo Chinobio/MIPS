@@ -157,10 +157,12 @@ def IF(instruction):
     # if return_value_flag:
     #     return
     print('IF stage ',rawInstructions[currentInstructionNum - 1],cycle)
-    if PipelineRegister.ID_EX['input'].branch == True:
-        PipelineRegister.ID_EX['input'].branch = False
-        PipelineRegister.IF_ID['input'] = pipInfo(-1,-1,-1,0,'None')
-        return
+    # if PipelineRegister.ID_EX['input'].branch == True:
+    #     PipelineRegister.ID_EX['input'].branch = False
+    #     PipelineRegister.IF_ID['input'] = pipInfo(-1,-1,-1,0,'None')
+    #     instruction.next_stage = "IF"
+    #     stageInstructions["IF"] = instruction
+    #     return
     instruction.next_stage = "ID"
     stageInstructions["IF"] = instruction
     PipelineRegister.IF_ID['input'] = pipInfo(None, None, None, None, instruction.name,instruction_num=currentInstructionNum , rawInstruction=raw,loadword=None)
@@ -219,11 +221,11 @@ def ID(instruction:Instruction):
         instruction.next_stage = "EX"
         PipelineRegister.ID_EX['input'] = pipInfo(rs, rt, rd, offset, instruction.name, PipelineRegister.IF_ID['output'].rawInstruction)
         stageInstructions["ID"] = instruction
-        if rs == rt:
-            if offset > 0:
-                offset = offset + 1
-            currentInstructionNum = PipelineRegister.IF_ID['output'].instruction_num + offset 
-            PipelineRegister.ID_EX['input'].branch = True
+        # if rs == rt:
+        #     if offset > 0:
+        #         offset = offset + 1
+        #     currentInstructionNum = PipelineRegister.IF_ID['output'].instruction_num + offset 
+        #     PipelineRegister.ID_EX['input'].branch = True
 
     else:
         raise Exception("Unknown instruction name")
