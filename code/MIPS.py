@@ -459,7 +459,7 @@ class PipelineRegister:
     MEM_WB = {'input': None, 'output': None}
 
 # 原始指令字串list
-rawInstructions = read_file("ex6.txt")
+rawInstructions = read_file("ex5.txt")
 
 # 在stage中的指令
 stageInstructions = {
