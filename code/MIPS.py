@@ -157,10 +157,13 @@ def IF(instruction):
     # if return_value_flag:
     #     return
     print('IF stage ',rawInstructions[currentInstructionNum - 1],cycle)
-    
+    if PipelineRegister.ID_EX['input'].branch == True:
+        PipelineRegister.ID_EX['input'].branch = False
+        PipelineRegister.IF_ID['input'] = pipInfo(-1,-1,-1,0,'None')
+        return
     instruction.next_stage = "ID"
     stageInstructions["IF"] = instruction
-    PipelineRegister.IF_ID['input'] = pipInfo(None, None, None, None, instruction.name, rawInstruction=raw,loadword=None)
+    PipelineRegister.IF_ID['input'] = pipInfo(None, None, None, None, instruction.name,instruction_num=currentInstructionNum , rawInstruction=raw,loadword=None)
     # pipReg["IF/ID"] = pipInfo(None, None, None, None, instruction.name, rawInstruction=raw)
     # print('IF raw ',pipReg["IF/ID"].rawInstruction)
     # print('ID raw ',instruction.rawInstruction)
@@ -213,13 +216,15 @@ def ID(instruction:Instruction):
         rt = int(PipelineRegister.IF_ID['output'].rawInstruction.split(" ")[2].split("$")[1].split(",")[0])
         rd = 0
         offset = int(PipelineRegister.IF_ID['output'].rawInstruction.split(" ")[3])
-        if reg[rs] == reg[rt]:
-            instruction.next_stage = "EX"
-            PipelineRegister.ID_EX['input'] = pipInfo(rs, rt, rd, offset, instruction.name, PipelineRegister.IF_ID['output'].rawInstruction)
-            stageInstructions["ID"] = instruction
-        else:    
-            PipelineRegister.ID_EX['input'] = None
-       
+        instruction.next_stage = "EX"
+        PipelineRegister.ID_EX['input'] = pipInfo(rs, rt, rd, offset, instruction.name, PipelineRegister.IF_ID['output'].rawInstruction)
+        stageInstructions["ID"] = instruction
+        if rs == rt:
+            if offset > 0:
+                offset = offset + 1
+            currentInstructionNum = PipelineRegister.IF_ID['output'].instruction_num + offset 
+            PipelineRegister.ID_EX['input'].branch = True
+
     else:
         raise Exception("Unknown instruction name")
     
@@ -397,7 +402,7 @@ mem = np.ones(32)
 
 
 class pipInfo:
-    def __init__(self, rs, rt, rd, offset, intrsuction_name, rawInstruction = None, address = None, branch = False, branch_address = None, loadword = None,EX_result = None):
+    def __init__(self, rs, rt, rd, offset, intrsuction_name, instruction_num = None, rawInstruction = None, address = None, branch = False, branch_address = None, loadword = None,EX_result = None):
         signals = {
             'lw' : {
                 'EX': '01',
@@ -441,6 +446,7 @@ class pipInfo:
         self.branch_address = branch_address
         self.loadword = loadword
         self.EX_result = EX_result
+        self.instruction_num = instruction_num
 
 pipReg = {
     'IF/ID' : None,
@@ -456,7 +462,7 @@ class PipelineRegister:
     MEM_WB = {'input': None, 'output': None}
 
 # 原始指令字串list
-rawInstructions = read_file("ex5.txt")
+rawInstructions = read_file("ex3.txt")
 
 # 在stage中的指令
 stageInstructions = {
