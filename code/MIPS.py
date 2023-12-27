@@ -322,7 +322,7 @@ def MEM(instruction:Instruction):
     global cycle,currentInstructionNum,return_value_flag
     if instruction == None:
         PipelineRegister.MEM_WB['input'] = pipInfo(-1,-1,-1,0,'None')
-        print("MEM stage: None")
+        print("MEM stage: None")#
         return
     # if currentInstructionNum >= len(rawInstructions) + 5:
     #     stageInstructions["MEM"] = None
