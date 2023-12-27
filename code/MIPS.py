@@ -148,6 +148,7 @@ def IF(instruction):
         # currentInstructionNum += 1
         return
     if PipelineRegister.IF_ID['output'] is not None and PipelineRegister.ID_EX['input'].branch == True:
+        PipelineRegister.ID_EX['input'].branch = False
         PipelineRegister.IF_ID['input'] = pipInfo(-1,-1,-1,0,'None')
         print("IF return")
         return
@@ -486,7 +487,7 @@ class PipelineRegister:
     MEM_WB = {'input': None, 'output': None}
 
 # 原始指令字串list
-rawInstructions = read_file("ex3.txt")
+rawInstructions = read_file("ex2.txt")
 
 # 在stage中的指令
 stageInstructions = {
