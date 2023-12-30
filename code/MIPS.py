@@ -23,7 +23,15 @@ TWO_TEMP_CYCLE = -1
 
 def check_beq_hazard(rs, rt,cycle):
     global ONE_CYCLE_BEQ,TWO_CYCLE_BEQ,ONE_TEMP_CYCLE,TWO_TEMP_CYCLE
-    
+    #PY 蝦改
+    if ONE_CYCLE_BEQ == True and cycle - ONE_TEMP_CYCLE >= 1:
+        ONE_CYCLE_BEQ = False
+    if TWO_CYCLE_BEQ == True and cycle - TWO_TEMP_CYCLE >= 2:
+        TWO_CYCLE_BEQ = False
+    elif TWO_CYCLE_BEQ == True and cycle - TWO_TEMP_CYCLE >= 1:
+        stageInstructions["ID"].next_stage = "ID"
+        flag['now'] = "ID"
+        return True
     # 抓到NONE
     if PipelineRegister.EX_MEM['input'].signal['WB'][0] == "2" or PipelineRegister.EX_MEM['input'].signal['WB'][0] == "2":
         if TWO_CYCLE_BEQ == True and cycle - TWO_TEMP_CYCLE == 1:
@@ -67,21 +75,19 @@ def check_beq_hazard(rs, rt,cycle):
                     flag['now'] = "ID"
                     stageInstructions["ID"].next_stage = "ID"
                     ONE_CYCLE_BEQ = True
-                    TWO_TEMP_CYCLE = cycle
+                    # PY 蝦改
+                    ONE_TEMP_CYCLE = cycle
                     return True
         elif PipelineRegister.MEM_WB['input'].signal["EX"][0] == "1":
             if PipelineRegister.MEM_WB['input'].rd[0] == rs or PipelineRegister.EX_MEM['input'].rd[0] == rt:
                 print("BEQ hazard:forwarding")
                 flag['forward'] = "EX_MEM_beq"
                 return True   
-    if ONE_CYCLE_BEQ == True and cycle - ONE_TEMP_CYCLE == 1:
-        ONE_CYCLE_BEQ = False
+    # #PY 蝦改
+    # if ONE_CYCLE_BEQ == True and cycle - ONE_TEMP_CYCLE >= 1:
+    #     ONE_CYCLE_BEQ = False
     # 存在兩次STALL
-    if TWO_CYCLE_BEQ == True and cycle - TWO_TEMP_CYCLE == 2:
-        TWO_CYCLE_BEQ = False
-    elif TWO_CYCLE_BEQ == True and cycle - TWO_TEMP_CYCLE == 1:
-        stageInstructions["ID"].next_stage = "ID"
-        return True
+    
     return False
 
 def check_ex_hazard(rs,rt,rd):
@@ -169,6 +175,7 @@ def IF(instruction):
 
 def ID(instruction:Instruction):
     global currentInstructionNum,cycle, flag
+    next_stage = "EX"
     if instruction == None or PipelineRegister.IF_ID['output'].rawInstruction == None:
         print("ID stage: None")
         PipelineRegister.ID_EX['input'] = pipInfo(-1,-1,-1,0,'None')
@@ -210,6 +217,7 @@ def ID(instruction:Instruction):
     
     if check_beq_hazard(rs,rt,cycle):
         if flag['now'] == 'ID':
+            next_stage = "ID"
             return
     if check_ex_hazard(rs,rt,rd):
         # print("ID return")
@@ -236,7 +244,7 @@ def ID(instruction:Instruction):
             rt_reg = reg[rt]
         if rs_reg == rt_reg:
             isBranch = True
-    instruction.next_stage = "EX"
+    instruction.next_stage = next_stage
     PipelineRegister.ID_EX['input'] = pipInfo(rs, rt, rd, offset, instruction.name,PipelineRegister.IF_ID['output'].rawInstruction,branch=isBranch, instruction_num=PipelineRegister.IF_ID['output'].instruction_num)
     stageInstructions["ID"] = instruction
 
@@ -459,7 +467,7 @@ class PipelineRegister:
     MEM_WB = {'input': None, 'output': None}
 
 # 原始指令字串list
-rawInstructions = read_file("ex4.txt")
+rawInstructions = read_file("ex8.txt")
 
 # 在stage中的指令
 stageInstructions = {
