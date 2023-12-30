@@ -30,6 +30,11 @@ def check_beq_hazard(rs, rt,cycle):
             stageInstructions["ID"].next_stage = "ID"
             flag['now'] = "ID"
             return True
+        elif PipelineRegister.MEM_WB['input'].signal["EX"][0] == "1":
+            if PipelineRegister.MEM_WB['input'].rd[0] == rs or PipelineRegister.EX_MEM['input'].rd[0] == rt:
+                print("BEQ hazard:forwarding")
+                flag['forward'] = "EX_MEM"
+                return True   
         return False
 
         # Need 1 stall cycle lw 接 R_type 
@@ -64,6 +69,11 @@ def check_beq_hazard(rs, rt,cycle):
                     ONE_CYCLE_BEQ = True
                     TWO_TEMP_CYCLE = cycle
                     return True
+        elif PipelineRegister.MEM_WB['input'].signal["EX"][0] == "1":
+            if PipelineRegister.MEM_WB['input'].rd[0] == rs or PipelineRegister.EX_MEM['input'].rd[0] == rt:
+                print("BEQ hazard:forwarding")
+                flag['forward'] = "EX_MEM"
+                return True   
     if ONE_CYCLE_BEQ == True and cycle - ONE_TEMP_CYCLE == 1:
         ONE_CYCLE_BEQ = False
     # 存在兩次STALL
