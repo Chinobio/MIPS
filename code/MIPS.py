@@ -1,15 +1,15 @@
 import numpy as np
 
-root_file = "database/"
-file_name = "ex1.txt"
+root_file = "./database"
+file_name = "memory.txt"
 write_to_file = []
-f = open(f"{root_file}/output.txt", "w")
+f = open(f"{root_file}/result.txt", "w")
 f.close()
 
 class Instruction:
     name = ""
     next_stage = ""
-    next_stage = ""
+
 
 def read_file(file):
     instructions = []
@@ -452,12 +452,6 @@ class pipInfo:
         self.rt_reg = rt_reg
         self.rd_reg = rd_reg
 
-pipReg = {
-    'IF/ID' : None,
-    'ID/EX' : None,
-    'EX/MEM' : None,
-    'MEM/WB' : None,
-}
 
 class PipelineRegister:
     IF_ID = {'input': None, 'output': None}
@@ -489,22 +483,14 @@ def checkPiplineRegister_Rs_Rt_Rd(asked:dict):
         print("Rs",asked['output'].rs[0],"Rt",asked['output'].rt[0],"Rd",asked['output'].rd[0])
         print("-------------")
 
-def cycle_output_2(cycle,write_to_file):
-    f = open(f"{root_file}/output.txt", "a+")
+def cycle_output(cycle,write_to_file):
+    f = open(f"{root_file}/result.txt", "a+")
     f.write(f"cycle {cycle}\n")
     for i in write_to_file:
         f.write("    " + i + "\n")
     f.write("=====================================\n")
     f.close()
-def cycle_output():
-    f = open(f"{root_file}/output.txt", "a+")
-    f.write(f"cycle {cycle}\n")
-    f.write(f"IF: {stageInstructions['IF']}\n")
-    f.write(f"ID: {stageInstructions['ID']}\n")
-    f.write(f"EX: {stageInstructions['EX']}\n")
-    f.write(f"MEM: {stageInstructions['MEM']}\n")
-    f.write(f"WB: {stageInstructions['WB']}\n")
-    f.close()
+
 
 re_stage = ["WB", "MEM", "EX", "ID", "IF"]
 flag = {"now":"","forward":""}
@@ -517,8 +503,7 @@ while cycle == 1 or  stageInstructions["WB"] != None or stageInstructions["MEM"]
     EX(stageInstructions["EX"])
     ID(stageInstructions["ID"])
     IF(stageInstructions["IF"])
-    # cycle_output()
-    cycle_output_2(cycle,write_to_file)
+    cycle_output(cycle,write_to_file)
     write_to_file = []
     if flag['now'] == "":
         if PipelineRegister.ID_EX is not None and PipelineRegister.ID_EX['input'] is not None and  PipelineRegister.ID_EX['input'].branch == True:
@@ -562,9 +547,9 @@ while cycle == 1 or  stageInstructions["WB"] != None or stageInstructions["MEM"]
     flag['now'] = ""
     print("=====================================")
 
-f = open(f"{root_file}/output.txt", "a+",encoding='UTF-8')
-print(f"需要花{cycle}個cycle\n")
-f.write(f"需要花{cycle - 1}個cycle\n",)
+f = open(f"{root_file}/result.txt", "a+",encoding='UTF-8')
+print(f"需要花{cycle-1}個cycle\n")
+f.write(f"需要花{cycle-1}個cycle\n",)
 print("$0\t$1\t$2\t$3\t$4\t$5\t$6\t$7\t$8\t$9\t$10\t$11\t$12\t$13\t$14\t$15\t$16\t$17\t$18\t$19\t$20\t$21\t$22\t$23\t$24\t$25\t$26\t$27\t$28\t$29\t$30\t$31\n")
 print(reg)
 f.write("$0\t$1\t$2\t$3\t$4\t$5\t$6\t$7\t$8\t$9\t$10\t$11\t$12\t$13\t$14\t$15\t$16\t$17\t$18\t$19\t$20\t$21\t$22\t$23\t$24\t$25\t$26\t$27\t$28\t$29\t$30\t$31\n")
