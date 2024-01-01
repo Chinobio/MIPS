@@ -7,7 +7,7 @@
 
 ## 執行方式
 ### 以exe檔執行
-1. memory.txt 及 MIPS.exe 放在同一個資料夾下
+1. memory.txt 及 MIPS_sameFolder.exe 放在同一個資料夾下
 2. 開啟命令提示字元
 3. 切換到該資料夾
 4. 輸入 `MIPS_sameFolder.exe`
