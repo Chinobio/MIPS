@@ -1,6 +1,10 @@
 import numpy as np
 
 root_file = "database/"
+file_name = "ex8.txt"
+
+f = open(f"{root_file}/output.txt", "w")
+f.close()
 
 class Instruction:
     name = ""
@@ -23,7 +27,7 @@ TWO_TEMP_CYCLE = -1
 
 def check_beq_hazard(rs, rt,cycle):
     global ONE_CYCLE_BEQ,TWO_CYCLE_BEQ,ONE_TEMP_CYCLE,TWO_TEMP_CYCLE
-    #PY 蝦改
+
     if ONE_CYCLE_BEQ == True and cycle - ONE_TEMP_CYCLE >= 1:
         ONE_CYCLE_BEQ = False
     if TWO_CYCLE_BEQ == True and cycle - TWO_TEMP_CYCLE >= 2:
@@ -68,7 +72,6 @@ def check_beq_hazard(rs, rt,cycle):
                     return True
         # Need 1 stall cycle 直接 R_type
         elif PipelineRegister.EX_MEM['input'].signal["EX"][0] == "1":
-            print(PipelineRegister.IF_ID['input'].rawInstruction)
             if PipelineRegister.IF_ID['input'].signal["M"][0] == "1" :
                 if PipelineRegister.EX_MEM['input'].rd[0] == rs or PipelineRegister.EX_MEM['input'].rd[0] == rt:
                     print("BEQ hazard")
@@ -83,16 +86,13 @@ def check_beq_hazard(rs, rt,cycle):
                 print("BEQ hazard:forwarding")
                 flag['forward'] = "EX_MEM_beq"
                 return True   
-    # #PY 蝦改
-    # if ONE_CYCLE_BEQ == True and cycle - ONE_TEMP_CYCLE >= 1:
-    #     ONE_CYCLE_BEQ = False
-    # 存在兩次STALL
+
     
     return False
 
 def check_ex_hazard(rs,rt,rd):
     if PipelineRegister.EX_MEM['input'].rt[0] == -1 or rt == -1 and PipelineRegister.EX_MEM['input'].rt[0] == -1 or rt == -1 : 
-        print("false")
+        
         return False
     
     if PipelineRegister.EX_MEM['input'] is not None:
@@ -125,7 +125,7 @@ def check_ex_hazard(rs,rt,rd):
 
 def check_mem_hazard(rs,rt,rd):
     if PipelineRegister.MEM_WB['input'].rt[0] == -1 or rt == -1 and PipelineRegister.MEM_WB['input'].rt[0] == -1 or rt == -1 : 
-        print("false")
+        
         return False
     if PipelineRegister.MEM_WB['input'] is not None:
         if (PipelineRegister.MEM_WB['input'].signal['WB'][0] == "1" and #MEM/WB.RegWrite = TRUE
@@ -167,7 +167,7 @@ def IF(instruction):
     instruction = Instruction()
     instruction.name = raw.split(" ")[0]
 
-    print('IF stage ',rawInstructions[currentInstructionNum],cycle)
+    print('IF stage ',rawInstructions[currentInstructionNum])
     
     instruction.next_stage = "ID"
     stageInstructions["IF"] = instruction
@@ -180,7 +180,7 @@ def ID(instruction:Instruction):
         print("ID stage: None")
         PipelineRegister.ID_EX['input'] = pipInfo(-1,-1,-1,0,'None')
         return
-    print("ID Stage",PipelineRegister.IF_ID['output'].rawInstruction,cycle)
+    print("ID Stage",PipelineRegister.IF_ID['output'].rawInstruction)
     isBranch = False
     if instruction.name == "add":
         rs = int(PipelineRegister.IF_ID['output'].rawInstruction.split(" ")[2].split(",")[0].split("$")[1])
@@ -231,7 +231,6 @@ def ID(instruction:Instruction):
     if(instruction.name == "beq"):
         if flag['forward'] == "EX_MEM_beq":
             
-            print("PipelineRegister.EX_MEM['output'].rd",PipelineRegister.EX_MEM['output'].rd[0])
             if rs == PipelineRegister.EX_MEM['output'].rd[0]:
                 rs_reg = PipelineRegister.EX_MEM['output'].EX_result
                 rt_reg = reg[rt]
@@ -257,14 +256,14 @@ def EX(instruction:Instruction):
         return
 
     
-    print("EX stage",PipelineRegister.ID_EX['output'].rawInstruction,cycle)
+    print("EX stage",PipelineRegister.ID_EX['output'].rawInstruction)
     rs = PipelineRegister.ID_EX['output'].rs[0]
     rt = PipelineRegister.ID_EX['output'].rt[0]
     rs_reg = reg[PipelineRegister.ID_EX['output'].rs].copy()
     rt_reg = reg[PipelineRegister.ID_EX['output'].rt].copy()
     PipelineRegister.ID_EX['output'].rs_reg = rs_reg
     PipelineRegister.ID_EX['output'].rt_reg = rt_reg
-    print("rsrt",rs_reg,rt_reg)
+
     if flag['forward'] == "EX_MEM":
         if PipelineRegister.ID_EX['output'].rs[0] == PipelineRegister.EX_MEM['output'].rd[0]:
             rs_reg = PipelineRegister.EX_MEM['output'].EX_result
@@ -276,7 +275,7 @@ def EX(instruction:Instruction):
         rd_reg = rs_reg + rt_reg
         offset = PipelineRegister.ID_EX['output'].offset
         instruction.next_stage = "MEM"
-        # print("rs,rt,rd",rs,rt,rd)
+
         EX_result = rd_reg
         stageInstructions["EX"] = instruction
         
@@ -299,21 +298,21 @@ def EX(instruction:Instruction):
         baseAddress = rs_reg.copy()
         offset = PipelineRegister.ID_EX['output'].offset
         address = baseAddress + offset/4
-        #data = mem[address]
+
         instruction.next_stage = "MEM"
         stageInstructions["EX"] = instruction
-        # print("offset,address,baseAddress",offset,address,baseAddress)
+
         PipelineRegister.EX_MEM['input'] = PipelineRegister.ID_EX['output']
-        # print(PipelineRegister.EX_MEM['input'].rawInstruction)
+
         PipelineRegister.EX_MEM['input'].address = address
     elif instruction.name == "sw":
         baseAddress = rs_reg.copy()
         offset = PipelineRegister.ID_EX['input'].offset
         address = baseAddress + offset/4
-        #data = reg[pipReg["ID/EX"].rt].copy()
+
         instruction.next_stage = "MEM"
         stageInstructions["EX"] = instruction
-        print("offset,address,baseAddress",offset,address,baseAddress)
+        
         PipelineRegister.EX_MEM['input'] = PipelineRegister.ID_EX['output']
         PipelineRegister.EX_MEM['input'].address = address
     elif instruction.name == "beq":
@@ -336,18 +335,15 @@ def MEM(instruction:Instruction):
         PipelineRegister.MEM_WB['input'] = pipInfo(-1,-1,-1,0,'None')
         print("MEM stage: None")
         return
-    # if currentInstructionNum >= len(rawInstructions) + 5:
-    #     stageInstructions["MEM"] = None
-    #     currentInstructionNum += 1
-    #     return
-    print("MEM stage",PipelineRegister.EX_MEM['output'].rawInstruction,cycle)
+
+    print("MEM stage",PipelineRegister.EX_MEM['output'].rawInstruction)
     if PipelineRegister.EX_MEM['output'].signal['M'][2] == "1": #sw
         temp = PipelineRegister.EX_MEM['output'].rt[0]
-        # print(PipelineRegister.EX_MEM['output'].rt)
+
         mem[ int(PipelineRegister.EX_MEM['output'].address) ] = reg[ int(temp) ]
         loadWord = None
     elif PipelineRegister.EX_MEM['output'].signal['M'][1] == "1": #lw
-        # print(PipelineRegister.EX_MEM['output'].address)
+
         loadWord = mem[int(PipelineRegister.EX_MEM['output'].address) ]
     elif instruction.name == "beq":
         loadWord = None
@@ -373,8 +369,8 @@ def WB(instruction):
     if instruction == None:
         print("WB stage: None")
         return
-    # print(PipelineRegister.MEM_WB['output'].loadword)
-    print("WB stage",PipelineRegister.MEM_WB['output'].rawInstruction,cycle)
+
+    print("WB stage",PipelineRegister.MEM_WB['output'].rawInstruction)
     result = PipelineRegister.MEM_WB['output'].loadword
     # ALU 接
 
@@ -382,7 +378,7 @@ def WB(instruction):
         rd = PipelineRegister.MEM_WB['output'].rt
         temp = rd[0]
         reg[temp] = result
-        # print("reg[rd]",reg[temp])
+
     elif instruction.name in ['add', 'sub']:
         rd = PipelineRegister.MEM_WB['output'].EX_result
         reg[PipelineRegister.MEM_WB['output'].rd] = rd
@@ -467,7 +463,7 @@ class PipelineRegister:
     MEM_WB = {'input': None, 'output': None}
 
 # 原始指令字串list
-rawInstructions = read_file("ex8.txt")
+rawInstructions = read_file(file_name)
 
 # 在stage中的指令
 stageInstructions = {
@@ -490,24 +486,34 @@ def checkPiplineRegister_Rs_Rt_Rd(asked:dict):
         print("Rs",asked['output'].rs[0],"Rt",asked['output'].rt[0],"Rd",asked['output'].rd[0])
         print("-------------")
 
+def cycle_output():
+    f = open(f"{root_file}/output.txt", "a+")
+    f.write(f"cycle {cycle}\n")
+    f.write(f"IF: {stageInstructions['IF']}\n")
+    f.write(f"ID: {stageInstructions['ID']}\n")
+    f.write(f"EX: {stageInstructions['EX']}\n")
+    f.write(f"MEM: {stageInstructions['MEM']}\n")
+    f.write(f"WB: {stageInstructions['WB']}\n")
+    f.close()
+
 re_stage = ["WB", "MEM", "EX", "ID", "IF"]
 flag = {"now":"","forward":""}
+
 while cycle == 1 or  stageInstructions["WB"] != None or stageInstructions["MEM"] != None or stageInstructions["EX"] != None or stageInstructions["ID"] != None or stageInstructions["IF"] != None: 
+    print("cycle",cycle)
     WB(stageInstructions["WB"])
     MEM(stageInstructions["MEM"])
     EX(stageInstructions["EX"])
     ID(stageInstructions["ID"])
     IF(stageInstructions["IF"])
+    cycle_output()
     if flag['now'] == "":
-        print("PipelineRegister.ID_EX['input'].branch",PipelineRegister.ID_EX['input'].branch)
         if PipelineRegister.ID_EX is not None and PipelineRegister.ID_EX['input'] is not None and  PipelineRegister.ID_EX['input'].branch == True:
             
             currentInstructionNum = PipelineRegister.ID_EX['input'].instruction_num + PipelineRegister.ID_EX['input'].offset +1
-            print(PipelineRegister.ID_EX['input'].instruction_num)
-            print(PipelineRegister.ID_EX['input'].offset)
+            
             stageInstructions["IF"] = None
             PipelineRegister.ID_EX['input'].branch = False
-            print('jump')
         else:
             currentInstructionNum += 1
     stageInstructions2 = stageInstructions
@@ -517,7 +523,7 @@ while cycle == 1 or  stageInstructions["WB"] != None or stageInstructions["MEM"]
             stageInstructions2[re_stage[re_stage.index(stage)-1]] = None
         elif stageInstructions[stage].next_stage == stage:
             delete_stage_index = list(stageInstructions.keys()).index(stage) + 1
-            # print("aaa",delete_stage_index)
+
             
             stageInstructions2[re_stage[delete_stage_index]] = None
             # ID IF 後面都保持原本的指令
@@ -525,7 +531,6 @@ while cycle == 1 or  stageInstructions["WB"] != None or stageInstructions["MEM"]
         else:
             stageInstructions2[stageInstructions[stage].next_stage] = stageInstructions[stage]
     stageInstructions2["IF"] = None #每次清除IF
-    print("CYCLE",cycle)
     stageInstructions = stageInstructions2
 
     if flag["now"] == "ID":
@@ -540,13 +545,25 @@ while cycle == 1 or  stageInstructions["WB"] != None or stageInstructions["MEM"]
     cycle += 1
     if cycle > 15:
         break
-    # if flag['now'] != "":
-    #     currentInstructionNum -= 1
-    #     print("currentInstructionNum -= 1")
+
     flag['now'] = ""
     print("=====================================")
 
+f = open(f"{root_file}/output.txt", "a+",encoding='UTF-8')
+print("需要花{cycle}個cycle\n")
+f.write(f"需要花{cycle}個cycle\n",)
+print("$0\t$1\t$2\t$3\t$4\t$5\t$6\t$7\t$8\t$9\t$10\t$11\t$12\t$13\t$14\t$15\t$16\t$17\t$18\t$19\t$20\t$21\t$22\t$23\t$24\t$25\t$26\t$27\t$28\t$29\t$30\t$31\n")
+print(reg)
+f.write("$0\t$1\t$2\t$3\t$4\t$5\t$6\t$7\t$8\t$9\t$10\t$11\t$12\t$13\t$14\t$15\t$16\t$17\t$18\t$19\t$20\t$21\t$22\t$23\t$24\t$25\t$26\t$27\t$28\t$29\t$30\t$31\n")
+for i in reg:
+    f.write(str(int(i))+"\t")
+f.write("\n")
+print("W0\tW1\tW2\tW3\tW4\tW5\tW6\tW7\tW8\tW9\tW10\tW11\tW12\tW13\tW14\tW15\tW16\tW17\tW18\tW19\tW20\tW21\tW22\tW23\tW24\tW25\tW26\tW27\tW28\tW29\tW30\tW31\n")
+print(mem)
+f.write("W0\tW1\tW2\tW3\tW4\tW5\tW6\tW7\tW8\tW9\tW10\tW11\tW12\tW13\tW14\tW15\tW16\tW17\tW18\tW19\tW20\tW21\tW22\tW23\tW24\tW25\tW26\tW27\tW28\tW29\tW30\tW31\n")
+for i in mem:
+    f.write(str(int(i))+"\t")
+f.write("\n")
 
-print("reg",reg)
 
-print("mem",mem)
+    

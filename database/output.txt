@@ -1,0 +1,83 @@
+cycle 1
+IF: <__main__.Instruction object at 0x0000011E36D2FF50>
+ID: None
+EX: None
+MEM: None
+WB: None
+cycle 2
+IF: <__main__.Instruction object at 0x0000011E36D44290>
+ID: <__main__.Instruction object at 0x0000011E36D2FF50>
+EX: None
+MEM: None
+WB: None
+cycle 3
+IF: <__main__.Instruction object at 0x0000011E36D443D0>
+ID: <__main__.Instruction object at 0x0000011E36D44290>
+EX: <__main__.Instruction object at 0x0000011E36D2FF50>
+MEM: None
+WB: None
+cycle 4
+IF: <__main__.Instruction object at 0x0000011E36D443D0>
+ID: <__main__.Instruction object at 0x0000011E36D44290>
+EX: None
+MEM: <__main__.Instruction object at 0x0000011E36D2FF50>
+WB: None
+cycle 5
+IF: <__main__.Instruction object at 0x0000011E36D443D0>
+ID: <__main__.Instruction object at 0x0000011E36D44290>
+EX: None
+MEM: None
+WB: None
+cycle 6
+IF: <__main__.Instruction object at 0x0000011E36D44450>
+ID: None
+EX: <__main__.Instruction object at 0x0000011E36D44290>
+MEM: None
+WB: None
+cycle 7
+IF: <__main__.Instruction object at 0x0000011E36D44410>
+ID: <__main__.Instruction object at 0x0000011E36D44450>
+EX: None
+MEM: <__main__.Instruction object at 0x0000011E36D44290>
+WB: None
+cycle 8
+IF: <__main__.Instruction object at 0x0000011E36D44890>
+ID: <__main__.Instruction object at 0x0000011E36D44410>
+EX: <__main__.Instruction object at 0x0000011E36D44450>
+MEM: None
+WB: None
+cycle 9
+IF: <__main__.Instruction object at 0x0000011E36D44190>
+ID: <__main__.Instruction object at 0x0000011E36D44410>
+EX: None
+MEM: <__main__.Instruction object at 0x0000011E36D44450>
+WB: None
+cycle 10
+IF: None
+ID: <__main__.Instruction object at 0x0000011E36D44190>
+EX: <__main__.Instruction object at 0x0000011E36D44410>
+MEM: None
+WB: None
+cycle 11
+IF: None
+ID: None
+EX: <__main__.Instruction object at 0x0000011E36D44190>
+MEM: <__main__.Instruction object at 0x0000011E36D44410>
+WB: None
+cycle 12
+IF: None
+ID: None
+EX: None
+MEM: <__main__.Instruction object at 0x0000011E36D44190>
+WB: None
+cycle 13
+IF: None
+ID: None
+EX: None
+MEM: None
+WB: None
+需要花14個cycle
+$0	$1	$2	$3	$4	$5	$6	$7	$8	$9	$10	$11	$12	$13	$14	$15	$16	$17	$18	$19	$20	$21	$22	$23	$24	$25	$26	$27	$28	$29	$30	$31
+0	1	1	1	0	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	
+W0	W1	W2	W3	W4	W5	W6	W7	W8	W9	W10	W11	W12	W13	W14	W15	W16	W17	W18	W19	W20	W21	W22	W23	W24	W25	W26	W27	W28	W29	W30	W31
+1	1	0	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	
